@@ -1,7 +1,7 @@
-require("dotenv").config(); // make sure you have dotenv installed!
 const { Client, GatewayIntentBits, Events } = require("discord.js");
 const schedule = require("node-schedule");
 const fs = require("fs");
+require("dotenv").config();
 
 const client = new Client({
   intents: [
@@ -16,10 +16,10 @@ const trackedUsers = new Set(process.env.USER_IDS.split(","));
 const meowedToday = new Set();
 let firstMeowerId = null;
 
-// STREAKS
-
 const STREAK_FILE = "streaks.json";
 let meowStreaks = {};
+const COUNTER_FILE = "leaderboard.json";
+let meowCounts = {};
 
 if (fs.existsSync(STREAK_FILE)) {
   meowStreaks = JSON.parse(fs.readFileSync(STREAK_FILE));
@@ -29,9 +29,6 @@ function saveStreaks() {
   fs.writeFileSync(STREAK_FILE, JSON.stringify(meowStreaks, null, 2));
 }
 
-const COUNTER_FILE = "leaderboard.json";
-let meowCounts = {};
-
 if (fs.existsSync(COUNTER_FILE)) {
   meowCounts = JSON.parse(fs.readFileSync(COUNTER_FILE));
 }
@@ -39,8 +36,6 @@ if (fs.existsSync(COUNTER_FILE)) {
 function saveCounts() {
   fs.writeFileSync(COUNTER_FILE, JSON.stringify(meowCounts, null, 2));
 }
-
-// ON BOT READY
 
 client.once(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -64,8 +59,8 @@ client.on(Events.MessageCreate, async (msg) => {
 
   if (msg.content === "!leaderboard" && msg.channel.id === TARGET_CHANNEL_ID) {
     const sorted = Object.entries(meowCounts)
-      .sort(([, a], [, b]) => b - a) // sort descending
-      .slice(0, 10); // top 10 only
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10);
 
     const medals = ["🥇", "🥈", "🥉"];
 
@@ -100,11 +95,10 @@ client.on(Events.MessageCreate, async (msg) => {
   ];
   const message = rewards[Math.floor(Math.random() * rewards.length)];
 
-  // Fetch cat image
   try {
     const res = await fetch("https://api.thecatapi.com/v1/images/search", {
       headers: {
-        "x-api-key": process.env.CAT_API_KEY, // optional but recommended
+        "x-api-key": process.env.CAT_API_KEY,
       },
     });
     const data = await res.json();
